@@ -1,0 +1,111 @@
+Index: main/src/app/app.module.ts
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- main/src/app/app.module.ts	(revision 4471f509c119df75213d18efd06e0aa8ea10a42c)
++++ main/src/app/app.module.ts	(revision 97f5682e07ba6048e6c38704af7986ef1426544c)
+@@ -29,7 +29,7 @@
+ import {Interceptor} from "./core/inteceptor";
+ import {CustomMaterialModule} from "./core/material.module";
+ import {AppRoutingModule} from "./core/app.routing.module";
+-import {LoginComponent} from "./authentication/login/login.component";
++import {AuthenticationModule} from "./authentication/authentication.module";
+ 
+ const DEFAULT_PERFECT_SCROLLBAR_CONFIG: PerfectScrollbarConfigInterface = {
+   suppressScrollX: true,
+@@ -48,8 +48,7 @@
+     AppComponent,
+     UserComponent,
+     PaypalComponent,
+-    Safe,
+-    LoginComponent
++    Safe
+   ],
+   imports: [
+     CommonModule,
+@@ -64,7 +63,8 @@
+     PerfectScrollbarModule,
+     BrowserModule,
+     HttpClientModule,
+-    AppRoutingModule
++    AppRoutingModule,
++    AuthenticationModule
+   ],
+   providers: [UserService, AuthService, TokenStorage, PaypalService, Safe,
+     {
+Index: main/src/app/authentication/authentication.module.ts
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- main/src/app/authentication/authentication.module.ts	(revision 4471f509c119df75213d18efd06e0aa8ea10a42c)
++++ main/src/app/authentication/authentication.module.ts	(revision 97f5682e07ba6048e6c38704af7986ef1426544c)
+@@ -12,9 +12,22 @@
+ import { Signup2Component } from './signup2/signup2.component';
+ 
+ import { AuthenticationRoutes } from './authentication.routing';
++import {MatButtonModule, MatFormFieldModule, MatInputModule, MatRippleModule} from "@angular/material";
++import {FormsModule} from "@angular/forms";
+ 
+ @NgModule({
+-  imports: [CommonModule, RouterModule.forChild(AuthenticationRoutes), NgbModule],
+-  declarations: [NotFoundComponent,LoginComponent, SignupComponent, LockComponent, Login2Component, Signup2Component]
++  imports: [CommonModule, RouterModule.forChild(AuthenticationRoutes), NgbModule, MatButtonModule,
++    MatFormFieldModule,
++    MatInputModule,
++    MatRippleModule,
++    FormsModule
++  ],
++  declarations: [NotFoundComponent,LoginComponent, SignupComponent, LockComponent, Login2Component, Signup2Component],
++  exports: [
++    MatButtonModule,
++    MatFormFieldModule,
++    MatInputModule,
++    MatRippleModule,
++  ],
+ })
+ export class AuthenticationModule {}
+Index: main/src/app/core/inteceptor.ts
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- main/src/app/core/inteceptor.ts	(revision 4471f509c119df75213d18efd06e0aa8ea10a42c)
++++ main/src/app/core/inteceptor.ts	(revision 97f5682e07ba6048e6c38704af7986ef1426544c)
+@@ -15,18 +15,6 @@
+ 
+   constructor(private token: TokenStorage, private router: Router) { }
+ 
+-    private handleAuthError(err: HttpErrorResponse): Observable<any> {
+-        //handle your auth error or rethrow
+-        if (err.status === 401 || err.status === 403 || err.status === 422) {
+-            //navigate /delete cookies or whatever
+-            this.router.navigateByUrl(`/login`);
+-            // if you've caught / handled the error, you don't want to rethrow it unless you also want downstream consumers to have to handle it as well.
+-            return Observable.of(err);
+-        }
+-        return Observable.of(err);
+-    }
+-
+-
+   intercept(req: HttpRequest<any>, next: HttpHandler):
+     Observable<HttpSentEvent | HttpHeaderResponse | HttpProgressEvent | HttpResponse<any> | HttpUserEvent<any>> {
+     let authReq = req;
+@@ -39,4 +27,16 @@
+     return next.handle(authReq).catch(x=> this.handleAuthError(x)); //here use an arrow function, otherwise you may get "Cannot read property 'navigate' of undefined" on angular 4.4.2/net core 2/webpack 2.70
+   }
+ 
++  private handleAuthError(err: HttpErrorResponse): Observable<any> {
++    //handle your auth error or rethrow
++    if (err.status === 401 || err.status === 403 || err.status === 422) {
++      console.log('handleAuthError');
++      //navigate /delete cookies or whatever
++      this.router.navigateByUrl(`/login`);
++      // if you've caught / handled the error, you don't want to rethrow it unless you also want downstream consumers to have to handle it as well.
++      //return Observable.of(err);
++    }
++    return Observable.of(err);
++  }
++
+ }

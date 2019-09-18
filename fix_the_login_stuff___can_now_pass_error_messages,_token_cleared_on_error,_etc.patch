@@ -1,0 +1,267 @@
+Index: main/src/app/authentication/login/login.component.html
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- main/src/app/authentication/login/login.component.html	(revision 97f5682e07ba6048e6c38704af7986ef1426544c)
++++ main/src/app/authentication/login/login.component.html	(date 1551654649000)
+@@ -1,13 +1,13 @@
+-<div class="login-register" style="background-image:url(assets/images/background/login-register.jpg);">
++<div [formGroup]="loginForm"  class="login-register" style="background-image:url(assets/images/background/login-register.jpg);">
+   <div class="login-box card">
+     <div class="card-body">
+       <form class="form-horizontal form-material" id="loginform" [ngClass]="{'d-none': recoverform}">
+         <h3 class="box-title m-b-20">Sign In</h3>
+-        <div class="form-group ">
++        <div >
+           <div class="col-xs-12">
+             <!--<input class="form-control" type="text" required="" placeholder="Username"> </div>-->
+             <mat-form-field>
+-              <input matInput class="form-control" type="text" placeholder="Username" name="username" [(ngModel)]="username" required>
++              <input matInput type="text" placeholder="Username" name="username" [(ngModel)]="username" required>
+             </mat-form-field>
+             <!--[ngClass]="{'d-none': username}"-->
+           </div>
+@@ -16,11 +16,15 @@
+           <div class="col-xs-12">
+             <!--<input class="form-control" type="password" required="" placeholder="Password"> </div>-->
+             <mat-form-field>
+-              <input matInput class="form-control" type="password" placeholder="Password" name="password"[(ngModel)]="password"  required>
++              <input matInput type="password" placeholder="Password" name="password"[(ngModel)]="password"  required>
+             </mat-form-field>
+             <!--[ngClass]="{'d-none': password}"-->
+           </div>
+         </div>
++        <div class="form-group">
++          <mat-error *ngIf="usernameInvalid">{{getErrorMessage()}}</mat-error>
++        </div>
++
+         <div class="form-group row">
+           <div class="col-md-12 font-14">
+             <div class="custom-control custom-checkbox">
+@@ -59,7 +63,7 @@
+         </div>
+         <div class="form-group ">
+           <div class="col-xs-12">
+-            <input class="form-control" type="text" required="" placeholder="Email"> </div>
++            <input class="" type="text" required="" placeholder="Email"> </div>
+         </div>
+         <div class="form-group text-center m-t-20">
+           <div class="col-xs-12">
+Index: main/src/app/authentication/login/login.component.ts
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- main/src/app/authentication/login/login.component.ts	(revision 97f5682e07ba6048e6c38704af7986ef1426544c)
++++ main/src/app/authentication/login/login.component.ts	(date 1551656279000)
+@@ -1,14 +1,15 @@
+ import { Component } from '@angular/core';
+-import {Router} from "@angular/router";
++import {ActivatedRoute, Router} from "@angular/router";
+ import {AuthService} from "../../core/auth.service";
+ import {TokenStorage} from "../../core/token.storage";
++import {FormControl, FormGroup, Validators} from "@angular/forms";
+ 
+ @Component({
+   selector: 'app-login',
+   templateUrl: './login.component.html'
+ })
+ export class LoginComponent {
+-  constructor(private router: Router, private authService: AuthService, private token: TokenStorage) {}
++  constructor(private router: Router, private authService: AuthService, private token: TokenStorage, private route: ActivatedRoute) {}
+ 
+   loginform = true;
+   recoverform = false;
+@@ -17,12 +18,41 @@
+   password: string;
+   email: string;
+ 
++  usernameInvalid: boolean;
++
++  messageList: string;
++  loginForm: FormGroup;
++  usernameFormControl = new FormControl('', [Validators.required]);
++
++  ngOnInit(): void {
++    // this should route user to a different page if they are already logged in
++
++     this.loginForm = new FormGroup({
++       usernameFormControl: this.usernameFormControl
++     });
++
++      console.log('FIRE INIT');
++  }
++
+   showRecoverForm() {
+     this.loginform = !this.loginform;
+     this.recoverform = !this.recoverform;
+   }
+ 
+   login(): void {
++
++    this.route.queryParams.subscribe(queryParams => {
++
++      this.messageList = queryParams['messageList'];
++      console.log(queryParams['messageList']);
++
++      // only check for errors if this list has something in it
++      if(this.messageList != null){
++        this.checkForErrors()
++      }
++
++    });
++
+     this.authService.attemptAuth(this.username, this.password).subscribe(
+       data => {
+         this.token.saveToken(data.token);
+@@ -31,6 +61,13 @@
+     );
+   }
+ 
++
++  getErrorMessage(){
++    //this.usernameFormControl = new FormControl('', [Validators.required]);
++    console.log('getErrorMessage triggered');
++    return 'Incorrect Username or Password'
++  }
++
+   createAccount(): void {
+     this.authService.createAccount(this.username, this.password, this.email).subscribe(
+       data => {
+@@ -40,4 +77,23 @@
+     );
+   }
+ 
++  checkForErrors(){
++    console.log('Check for errors');
++    console.log(this.messageList);
++
++    // if(){
++    //
++    // }
++
++    let obj = JSON.parse(this.messageList);
++
++    console.log('usernameError');
++    console.log(obj["usernameError"]);
++    if(obj["usernameError"]){
++      this.usernameInvalid = true;
++    } else {
++    }
++   // this.usernameInvalid = true;
++  }
++
+ }
+Index: main/src/app/authentication/authentication.module.ts
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- main/src/app/authentication/authentication.module.ts	(revision 97f5682e07ba6048e6c38704af7986ef1426544c)
++++ main/src/app/authentication/authentication.module.ts	(date 1551652493000)
+@@ -13,14 +13,15 @@
+ 
+ import { AuthenticationRoutes } from './authentication.routing';
+ import {MatButtonModule, MatFormFieldModule, MatInputModule, MatRippleModule} from "@angular/material";
+-import {FormsModule} from "@angular/forms";
++import {FormsModule, ReactiveFormsModule} from "@angular/forms";
+ 
+ @NgModule({
+   imports: [CommonModule, RouterModule.forChild(AuthenticationRoutes), NgbModule, MatButtonModule,
+     MatFormFieldModule,
+     MatInputModule,
+     MatRippleModule,
+-    FormsModule
++    FormsModule,
++    ReactiveFormsModule
+   ],
+   declarations: [NotFoundComponent,LoginComponent, SignupComponent, LockComponent, Login2Component, Signup2Component],
+   exports: [
+Index: main/src/app/core/inteceptor.ts
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- main/src/app/core/inteceptor.ts	(revision 97f5682e07ba6048e6c38704af7986ef1426544c)
++++ main/src/app/core/inteceptor.ts	(date 1551656164000)
+@@ -2,18 +2,19 @@
+ import {HttpInterceptor, HttpRequest, HttpHandler, HttpSentEvent, HttpHeaderResponse, HttpProgressEvent,
+   HttpResponse, HttpUserEvent, HttpErrorResponse} from '@angular/common/http';
+ import { Observable } from 'rxjs/Observable';
+-import { Router } from '@angular/router';
++import {ActivatedRoute, NavigationExtras, Router} from '@angular/router';
+ import {TokenStorage} from './token.storage';
+ import 'rxjs/add/operator/do';
+ import 'rxjs/add/operator/catch';
+ import 'rxjs/add/observable/of';
++import {LoginComponent} from "../authentication/login/login.component";
+ 
+ const TOKEN_HEADER_KEY = 'Authorization';
+ 
+ @Injectable()
+ export class Interceptor implements HttpInterceptor {
+ 
+-  constructor(private token: TokenStorage, private router: Router) { }
++  constructor(private token: TokenStorage, private router: Router, private loginComponent: LoginComponent) { }
+ 
+   intercept(req: HttpRequest<any>, next: HttpHandler):
+     Observable<HttpSentEvent | HttpHeaderResponse | HttpProgressEvent | HttpResponse<any> | HttpUserEvent<any>> {
+@@ -30,9 +31,17 @@
+   private handleAuthError(err: HttpErrorResponse): Observable<any> {
+     //handle your auth error or rethrow
+     if (err.status === 401 || err.status === 403 || err.status === 422) {
+-      console.log('handleAuthError');
+-      //navigate /delete cookies or whatever
+-      this.router.navigateByUrl(`/login`);
++      console.log('-----AUTH ERROR    -----');
++      console.log('-----REMOVING TOKEN-----');
++      this.token.signOut(); // remove the invalid token
++
++      //  pass a list of errors for the login controller to use
++      let navextras: NavigationExtras={
++        queryParams:{"messageList":JSON.stringify({"usernameError":"Incorrect username or Password. ", "generalError":"General error text. "})}
++      };
++
++
++       this.router.navigate(['login'],navextras);
+       // if you've caught / handled the error, you don't want to rethrow it unless you also want downstream consumers to have to handle it as well.
+       //return Observable.of(err);
+     }
+Index: main/src/app/app.module.ts
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- main/src/app/app.module.ts	(revision 97f5682e07ba6048e6c38704af7986ef1426544c)
++++ main/src/app/app.module.ts	(date 1551652446000)
+@@ -3,7 +3,7 @@
+ 
+ import { CommonModule } from '@angular/common';
+ import { NgModule } from '@angular/core';
+-import { FormsModule } from '@angular/forms';
++import {FormsModule, ReactiveFormsModule} from '@angular/forms';
+ import { HttpClientModule, HttpClient ,HTTP_INTERCEPTORS} from '@angular/common/http';
+ import { Routes, RouterModule } from '@angular/router';
+ import { FullComponent } from './layouts/full/full.component';
+@@ -30,6 +30,7 @@
+ import {CustomMaterialModule} from "./core/material.module";
+ import {AppRoutingModule} from "./core/app.routing.module";
+ import {AuthenticationModule} from "./authentication/authentication.module";
++import {LoginComponent} from "./authentication/login/login.component";
+ 
+ const DEFAULT_PERFECT_SCROLLBAR_CONFIG: PerfectScrollbarConfigInterface = {
+   suppressScrollX: true,
+@@ -64,9 +65,10 @@
+     BrowserModule,
+     HttpClientModule,
+     AppRoutingModule,
+-    AuthenticationModule
++    AuthenticationModule,
++    ReactiveFormsModule
+   ],
+-  providers: [UserService, AuthService, TokenStorage, PaypalService, Safe,
++  providers: [UserService, AuthService, TokenStorage, PaypalService, Safe, LoginComponent,
+     {
+       provide: PERFECT_SCROLLBAR_CONFIG,
+       useValue: DEFAULT_PERFECT_SCROLLBAR_CONFIG

@@ -1,0 +1,68 @@
+<div class="login-register" style="background-image:url(assets/images/background/login-register.jpg);">
+  <div class="login-box card">
+    <div class="card-body">
+      <form class="form-horizontal form-material" id="signUpForm">
+        <h3 class="box-title m-b-20">Sign Up</h3>
+
+        <mat-error *ngIf="userOrEmailTaken">
+          {{errorMessageDisplay}}
+        </mat-error>
+
+        <div class="form-group ">
+          <div class="col-xs-12">
+            <mat-form-field>
+              <input matInput [formControl]="usernameFormControl" type="text" placeholder="Username" name="username" [(ngModel)]="username" required>
+            </mat-form-field>
+          </div>
+        </div>
+        <div class="form-group ">
+          <div class="col-xs-12">
+            <mat-form-field>
+              <input matInput [formControl]="emailFormControl" type="text" placeholder="Email" name="email" [(ngModel)]="email" required>
+            </mat-form-field>
+          </div>
+        </div>
+        <div class="form-group ">
+          <div class="col-xs-12">
+            <mat-form-field>
+              <input matInput [formControl]="passwordFormControl" type="password" placeholder="Password" name="password" [(ngModel)]="password"  required>
+            </mat-form-field>
+          </div>
+        </div>
+        <div class="form-group">
+          <div class="col-xs-12">
+            <mat-form-field>
+              <input matInput [formControl]="passwordFormControl" type="password" placeholder="Confirm Password" name="confirmPassword" [(ngModel)]="confirmPassword"  required>
+              <mat-error *ngIf="!passwordsMatch()">
+                Passwords do not match
+              </mat-error>
+            </mat-form-field>
+          </div>
+        </div>
+        <div class="form-group row">
+          <div class="col-md-12">
+              <mat-checkbox [formControl]="checkboxFormControl" id="customCheck1" name="acceptTerms" [(ngModel)]="acceptTerms" required>
+              </mat-checkbox>
+              <label style="margin-left: 2px" for="customCheck1"> I agree to all the <a href="#">Terms</a>.</label>
+              <mat-error *ngIf="!termsChecked()">
+                Agree to terms to continue
+              </mat-error>
+            </div>
+
+        </div>
+<!--        <div *ngIf="noErrors">-->
+          <div class="form-group text-center p-b-20">
+            <div class="col-xs-12">
+              <a class="btn btn-info btn-lg btn-block btn-rounded text-uppercase waves-effect waves-light" (click)="signUpNewUser()" [class.disabled]="!signUpForm.valid">Sign Up</a>
+            </div>
+          </div>
+<!--        </div>-->
+        <div class="form-group m-b-0">
+          <div class="col-sm-12 text-center">
+            Already have an account? <a class="text-info m-l-5" [routerLink]="['/authentication/login']"><b>Sign In</b></a>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
